@@ -29,8 +29,8 @@ class Titlebar
 			return;
 		TitlebarUtility.initialize();
 		#if lime
-		lime.app.Application.current.window.borderless = !lime.app.Application.current.window.borderless;
-		lime.app.Application.current.window.borderless = !lime.app.Application.current.window.borderless;
+		lime.app.Application.current.window.width ++;
+		lime.app.Application.current.window.width --;
 		#end
 		initialized = true;
 	}
