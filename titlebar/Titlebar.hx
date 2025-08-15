@@ -27,11 +27,11 @@ class Titlebar
 	{
 		if (initialized)
 			return;
+		TitlebarUtility.initialize();
 		#if lime
 		lime.app.Application.current.window.borderless = !lime.app.Application.current.window.borderless;
 		lime.app.Application.current.window.borderless = !lime.app.Application.current.window.borderless;
 		#end
-		TitlebarUtility.initialize();
 		initialized = true;
 	}
 	
