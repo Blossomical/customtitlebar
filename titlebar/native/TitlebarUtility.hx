@@ -1,35 +1,34 @@
 package titlebar.native;
 
-import cpp.Int64;
 
-#if windows
-@:include("./TitlebarUtility.cpp")
-extern class TitlebarUtility {
-    @:native('titlebar__initializeNewWndProc') public static function initialize():Void;
-    @:native('titlebar__registerFontFromPath') public static function registerFont(path:String):Void;
-
-    // customization
-
-    @:native('titlebar__setButtonWidth') public static function setButtonWidth(width:Int64):Void;
-    @:native('titlebar__setTitleBarHeight') public static function setTitleBarHeight(height:Int64):Void;
-    @:native('titlebar__setUseButtonText') public static function setUseButtonText(useButtonText:Bool):Void;
-    @:native('titlebar__setTitlebarColor') public static function setTitleBarColor(red:Int64, green:Int64, blue:Int64):Void;
-
-    @:native('titlebar__setTitleFontColor') public static function setTitleFontColor(red:Int64, green:Int64, blue:Int64):Void;
-    @:native('titlebar__setButtonFontColor') public static function setButtonFontColor(red:Int64, green:Int64, blue:Int64):Void;
-    @:native('titlebar__setPrimaryButtonColor') public static function setPrimaryButtonColor(red:Int64, green:Int64, blue:Int64):Void;
-    @:native('titlebar__setSecondaryButtonColor') public static function setSecondaryButtonColor(red:Int64, green:Int64, blue:Int64):Void;
-    @:native('titlebar__setPrimaryButtonHoverColor') public static function setPrimaryButtonHoverColor(red:Int64, green:Int64, blue:Int64):Void;
-    @:native('titlebar__setSecondaryButtonHoverColor') public static function setSecondaryButtonHoverColor(red:Int64, green:Int64, blue:Int64):Void;
-    @:native('titlebar__setTitlebarImage') public static function setTitlebarImage(imagePath:String):Void;
-    @:native('titlebar__setPrimaryButtonImage') public static function setPrimaryButtonImage(imagePath:String):Void;
-    @:native('titlebar__setSecondaryButtonImage') public static function setSecondaryButtonImage(imagePath:String):Void;
-    @:native('titlebar__setPrimaryButtonHoverImage') public static function setPrimaryButtonHoverImage(imagePath:String):Void;
-    @:native('titlebar__setSecondaryButtonHoverImage') public static function setSecondaryButtonHoverImage(imagePath:String):Void;
-    @:native('titlebar__setTitleFont') public static function setTitleFont(name:String, size:Int64 = 16):Void;
-    @:native('titlebar__setButtonFont') public static function setButtonFont(name:String, size:Int64 = 10):Void;
-
-    @:native('titlebar__redrawWindow') public static function redrawWindow():Void;
-    @:native('titlebar__setCenterTitle') public static function setCenterTitle(centerTitle:Bool):Void;
+@:allow(titlebar.Titlebar)
+@:include("TitlebarUtility.hpp")
+@:buildXml("<include name='${haxelib:customtitlebar}/titlebar/native/build.xml' />")
+extern class TitlebarUtility
+{
+	@:native('titlebar__initializeNewWndProc') private static function initialize():Void;
+	@:native('titlebar__registerFontFromPath') private static function registerFont(path:String):Void;
+	
+	// customization
+	@:native('titlebar__setButtonWidth') private static function setButtonWidth(width:Int):Void;
+	@:native('titlebar__setTitleBarHeight') private static function setTitleBarHeight(height:Int):Void;
+	@:native('titlebar__setUseButtonText') private static function setUseButtonText(useButtonText:Bool):Void;
+	@:native('titlebar__setTitlebarColor') private static function setTitleBarColor(red:Int, green:Int, blue:Int):Void;
+	
+	@:native('titlebar__setTitleFontColor') private static function setTitleFontColor(red:Int, green:Int, blue:Int):Void;
+	@:native('titlebar__setButtonFontColor') private static function setButtonFontColor(red:Int, green:Int, blue:Int):Void;
+	@:native('titlebar__setPrimaryButtonColor') private static function setPrimaryButtonColor(red:Int, green:Int, blue:Int):Void;
+	@:native('titlebar__setSecondaryButtonColor') private static function setSecondaryButtonColor(red:Int, green:Int, blue:Int):Void;
+	@:native('titlebar__setPrimaryButtonHoverColor') private static function setPrimaryButtonHoverColor(red:Int, green:Int, blue:Int):Void;
+	@:native('titlebar__setSecondaryButtonHoverColor') private static function setSecondaryButtonHoverColor(red:Int, green:Int, blue:Int):Void;
+	@:native('titlebar__setTitlebarImage') private static function setTitlebarImage(imagePath:String):Void;
+	@:native('titlebar__setPrimaryButtonImage') private static function setPrimaryButtonImage(imagePath:String):Void;
+	@:native('titlebar__setSecondaryButtonImage') private static function setSecondaryButtonImage(imagePath:String):Void;
+	@:native('titlebar__setPrimaryButtonHoverImage') private static function setPrimaryButtonHoverImage(imagePath:String):Void;
+	@:native('titlebar__setSecondaryButtonHoverImage') private static function setSecondaryButtonHoverImage(imagePath:String):Void;
+	@:native('titlebar__setTitleFont') private static function setTitleFont(name:String, size:Int = 16):Void;
+	@:native('titlebar__setButtonFont') private static function setButtonFont(name:String, size:Int = 10):Void;
+	
+	@:native('titlebar__redrawWindow') private static function redrawWindow():Void;
+	@:native('titlebar__setCenterTitle') private static function setCenterTitle(centerTitle:Bool):Void;
 }
-#end
