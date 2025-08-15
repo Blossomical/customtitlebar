@@ -194,7 +194,10 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         float x = 10;
         if (titlebar__centerTitle)
-            x = (rect.right - 3 * titlebar__buttonWidth - iconSize + 6 + textSize.cx) / 2;
+        {
+            int totalWidth = iconSize + 6 + textSize.cx;
+            x = (rect.right - 3 * titlebar__buttonWidth - totalWidth) / 2;
+        }
         DrawIconEx(hdc, x, (titlebar__titleBarHeight - iconSize) / 2, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
 
         SetBkMode(hdc, TRANSPARENT);
