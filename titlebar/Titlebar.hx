@@ -1,0 +1,114 @@
+package titlebar;
+
+#if windows
+import titlebar.native.TitlebarUtility;
+
+class Titlebar
+{
+    public static var buttonWidth(default, set):Int = 32;
+    /**
+        NOTE: this does NOT change the height of the titlebar, it's just used for calculating the positions of the title, buttons and icons
+    **/
+    public static var height(default, set):Int = 30; 
+    /**
+        disables the button icons
+    **/
+    public static var useButtonText(default, set):Bool = true;
+
+    public static var centerTitle(default, set):Bool = false;
+
+    // init functions 
+
+    public static function initialize():Void {
+        TitlebarUtility.initialize();
+        #if openfl
+            openfl.Lib.application.window.width += 1;
+            openfl.Lib.application.window.width -= 1;
+        #end
+    }
+
+    public static function registerFont(path:String):Void
+        TitlebarUtility.registerFont(path);
+
+    public static function redrawWindow():Void
+        TitlebarUtility.redrawWindow();
+    // colors
+
+    public static function setTitlebarColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setTitleBarColor(red, green, blue);
+
+    public static function setTitleFontColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setTitleFontColor(red, green, blue);
+
+    public static function setButtonFontColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setButtonFontColor(red, green, blue);
+
+    public static function setPrimaryButtonColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setPrimaryButtonColor(red, green, blue);
+
+    public static function setSecondaryButtonColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setSecondaryButtonColor(red, green, blue);
+
+    public static function setPrimaryButtonHoverColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setPrimaryButtonHoverColor(red, green, blue);
+
+    public static function setSecondaryButtonHoverColor(red:Int, green:Int, blue:Int):Void
+        TitlebarUtility.setSecondaryButtonHoverColor(red, green, blue);
+
+    // images
+
+    /**
+        MUST use bit 24 .bmp file types
+    **/
+    public static function setTitlebarImage(imagePath:String):Void
+        TitlebarUtility.setTitlebarImage(imagePath);
+
+    public static function setPrimaryButtonImage(imagePath:String):Void // i do not recommend these button images because they will not stretch and will tile instead
+        TitlebarUtility.setPrimaryButtonImage(imagePath);
+
+    public static function setSecondaryButtonImage(imagePath:String):Void
+        TitlebarUtility.setSecondaryButtonImage(imagePath);
+
+    public static function setPrimaryButtonHoverImage(imagePath:String):Void
+        TitlebarUtility.setPrimaryButtonHoverImage(imagePath);
+
+    public static function setSecondaryButtonHoverImage(imagePath:String):Void
+        TitlebarUtility.setSecondaryButtonHoverImage(imagePath);
+
+    // fonts
+
+    public static function setTitleFont(name:String, path:String, size:Int = 16):Void {
+        registerFont(path);
+        TitlebarUtility.setTitleFont(name, size);
+    }
+
+    public static function setButtonFont(name:String, path:String, size:Int = 10):Void {
+        registerFont(path);
+        TitlebarUtility.setButtonFont(name, size);
+    }
+
+    public static function set_buttonWidth(width:Int):Int
+    {
+        TitlebarUtility.setButtonWidth(width);
+        return buttonWidth = width;
+    }
+
+    public static function set_height(height:Int):Int
+    {
+        TitlebarUtility.setTitleBarHeight(height);
+        return Titlebar.height = height;
+    }
+
+    public static function set_useButtonText(useButtonText:Bool):Bool
+    {
+        TitlebarUtility.setUseButtonText(useButtonText);
+        return Titlebar.useButtonText = useButtonText;
+    }
+
+    public static function set_centerTitle(centerTitle:Bool):Bool
+    {
+        TitlebarUtility.setCenterTitle(centerTitle);
+        return Titlebar.centerTitle = centerTitle;
+    }
+}
+#end

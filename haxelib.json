@@ -1,0 +1,20 @@
+{
+    "name": "customtitlebar",
+    "url": "https://github.com/Blossomical/customtitlebar",
+    "license": "MIT",
+    "tags": [
+        "flixel",
+        "openfl",
+        "game",
+        "extension"
+    ],
+    "description": "Titlebar / Window Frame Customization tool for Windows",
+    "version": "1.0.0",
+    "releasenote": "First release!",
+    "contributors": [
+        "Blossomical"
+    ],
+    "dependencies": {
+        "hxcpp": ""
+    }
+}
