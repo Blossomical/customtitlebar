@@ -1,0 +1,21 @@
+<xml>
+	<pragma once="true" />
+	<set name="titlebar_folder" value="${haxelib:customtitlebar}/titlebar/native/src" />
+
+	<files id="__main__">
+		<compilerflag value="-I${titlebar_folder}" />
+	</files>
+
+	<files id="haxe">
+		<compilerflag value="-I${titlebar_folder}" />
+	</files>
+
+	<files id="titlebar">
+		<compilerflag value="-I${titlebar_folder}" />
+		<file name="${titlebar_folder}/TitlebarUtility.cpp" />
+	</files>
+
+	<target id="haxe">
+		<files id="titlebar" />
+	</target>
+</xml>
