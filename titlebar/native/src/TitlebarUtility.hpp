@@ -4,8 +4,13 @@
 
 extern "C"
 {
+#ifdef HX_WINDOWS
     __declspec(dllexport) void titlebar__initializeNewWndProc();
     __declspec(dllexport) void titlebar__registerFontFromPath(String fontPath);
+#else
+    void titlebar__initializeNewWndProc();
+    void titlebar__registerFontFromPath(String fontPath);
+#endif
 }
 
 void titlebar__initializeNewWndProc();

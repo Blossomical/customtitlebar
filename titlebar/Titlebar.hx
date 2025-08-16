@@ -1,6 +1,5 @@
 package titlebar;
 
-#if windows
 import titlebar.native.TitlebarUtility;
 
 class Titlebar
@@ -126,4 +125,3 @@ class Titlebar
 		return Titlebar.centerTitle = centerTitle;
 	}
 }
-#end
