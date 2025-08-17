@@ -11,8 +11,5 @@
         "doWhile": "next",
         "tryBody": "next",
         "tryCatch": "next"
-    },
-    "indentation": {
-        "trailingWhitespace": true
     }
 }
