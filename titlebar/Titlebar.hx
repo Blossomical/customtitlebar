@@ -132,7 +132,7 @@ class Titlebar
 	private static inline function set_height(height:Int):Int
 	{
 		TitlebarUtility.setFrameDimensions(0, height, 0, 0);
-		TitleBar.setZoomedFrameDimensions(0, height, 0, 0);
+		Titlebar.setZoomedFrameDimensions(0, height, 0, 0);
 		return Titlebar.height = height;
 	}
 
