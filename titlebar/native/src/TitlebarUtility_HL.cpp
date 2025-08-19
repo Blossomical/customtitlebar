@@ -539,7 +539,7 @@ HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath)
     DeleteObject(hBitmap);
 }
 
-HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size)
+HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size = 16)
 {
 	const wchar_t* string = hl_aptr(name->bytes, const wchar_t);
     titlebar__hTitleFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
@@ -547,7 +547,7 @@ HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size)
                                        DEFAULT_PITCH | FF_DONTCARE, string);
 }
 
-HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size)
+HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size = 10)
 {
 	const wchar_t* string = hl_aptr(name->bytes, const wchar_t);
     titlebar__hButtonFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
