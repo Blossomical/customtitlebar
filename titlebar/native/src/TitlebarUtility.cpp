@@ -6,12 +6,25 @@
 
 // include stuff
 #ifdef HX_WINDOWS
-#include <windows.h>
+
+// https://stackoverflow.com/a/32633771/21013172
+#define NOMINMAX
+#include <algorithm>
+#include <Windows.h>
+#ifndef min
+#define min(x,y) ((x) < (y) ? (x) : (y))
+#endif
+#ifndef max
+#define max(x,y) ((x) > (y) ? (x) : (y))
+#endif
+#include <gdiplus.h>
+#undef min
+#undef max
+
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <functional>
-#include <gdiplus.h> // i have high hopes for this library
-#endif
+#include "GdiplusTypes.h"
 
 using namespace Gdiplus;
 
@@ -20,6 +33,7 @@ using namespace Gdiplus;
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "msimg32.lib")
+#endif
 
 // whatever this thing is
 extern "C"
