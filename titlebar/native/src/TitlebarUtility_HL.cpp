@@ -417,6 +417,12 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
 // initialization functions
 
+HL_PRIM void HL_NAME(loadGDI)(_NO_ARG)
+{
+    ULONG_PTR m_gdiplusToken;
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+}
 HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
 {
 #ifdef _WIN32
@@ -630,6 +636,7 @@ HL_PRIM void HL_NAME(setFrameMargins)(int left, int top, int right, int bottom) 
 HL_PRIM void HL_NAME(setIconSize)(int size) {}
 #endif
 
+DEFINE_PRIM(_VOID, loadGDI, _NO_ARG)
 DEFINE_PRIM(_VOID, initializeNewWndProc, _NO_ARG)
 DEFINE_PRIM(_VOID, registerFontFromPath, _STRING)
 DEFINE_PRIM(_VOID, setButtonWidth, _I32)
