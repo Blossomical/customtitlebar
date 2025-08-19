@@ -4,20 +4,15 @@
 
 extern "C"
 {
-#ifdef HX_WINDOWS
     __declspec(dllexport) void titlebar__initializeNewWndProc();
     __declspec(dllexport) void titlebar__registerFontFromPath(String fontPath);
-#else
-    void titlebar__initializeNewWndProc();
-    void titlebar__registerFontFromPath(String fontPath);
-#endif
 }
 
 void titlebar__initializeNewWndProc();
 void titlebar__registerFontFromPath(String fontPath);
-void titlebar__loadGDI();
 
 void titlebar__setButtonWidth(int width);
+void titlebar__setTitleBarHeight(int height);
 void titlebar__setUseButtonText(bool useButtonText);
 void titlebar__setTitlebarColor(int red, int green, int blue);
 void titlebar__setTitleFontColor(int red, int green, int blue);
@@ -35,7 +30,3 @@ void titlebar__setTitleFont(String name, int size = 16);
 void titlebar__setButtonFont(String name, int size = 10);
 void titlebar__redrawWindow();
 void titlebar__setCenterTitle(bool centerTitle);
-void titlebar__setFrameDimensions(int left, int top, int right, int bottom);
-void titlebar__setZoomedFrameDimensions(int left, int top, int right, int bottom);
-void titlebar__setFrameMargins(int left, int top, int right, int bottom);
-void titlebar__setIconSize(int size);
