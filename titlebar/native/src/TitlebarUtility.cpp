@@ -1,29 +1,39 @@
 #include "TitlebarUtility.hpp"
+#include <hxcpp.h>
 
 #define UNICODE
 #define _UNICODE
 
-
 // include stuff
-
+#ifdef HX_WINDOWS
 #include <windows.h>
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <functional>
-#include <hxcpp.h>
+#include <gdiplus.h> // i have high hopes for this library
+#endif
+
+using namespace Gdiplus;
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "user32.lib")
+#pragma comment(lib, "msimg32.lib")
 
 // whatever this thing is
-__declspec(dllexport) void titlebar__initializeNewWndProc();
-
 extern "C"
 {
+#ifdef HX_WINDOWS
+    __declspec(dllexport) void titlebar__initializeNewWndProc();
     __declspec(dllexport) void titlebar__registerFontFromPath(String fontPath);
+#else
+    void titlebar__initializeNewWndProc();
+    void titlebar__registerFontFromPath(String fontPath);
+#endif
 }
 
+#ifdef HX_WINDOWS
 enum Titlebar__HoverType
 {
     hoverOn_Nothing,
@@ -59,7 +69,10 @@ HBRUSH titlebar__primaryButtonHoverBrush = CreateSolidBrush(RGB(55, 40, 42));
 HBRUSH titlebar__secondaryButtonHoverBrush = CreateSolidBrush(RGB(223, 15, 16));
 
 int titlebar__buttonWidth = 32;
-int titlebar__titleBarHeight = 30;
+int titlebar__iconSize = 24;
+int titlebar__frameDimensions[4] = {GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER), GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER) + GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER), GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER)};
+int titlebar__zoomedFrameDimensions[4] = {GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER), GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER) + GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER), GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER)};
+MARGINS titlebar__frameMargins = {0};
 bool titlebar__useButtonText = true;
 bool titlebar__centerTitle = false;
 
@@ -67,16 +80,15 @@ bool titlebar__trackingMouseLeave = false;
 bool titlebar__useBitmapFrame = false;
 
 HBITMAP titlebar__bitmapFrame = nullptr;
-
 bool initialized = false;
 
 // functions
 
 void titlebar__updateButtonRects(const RECT &clientRect, bool useTop = false)
 {
-    titlebar__buttonRects.closeButton = {clientRect.right - titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right, (useTop ? clientRect.top : 0) + titlebar__titleBarHeight};
-    titlebar__buttonRects.maximizeButton = {clientRect.right - 2 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__titleBarHeight};
-    titlebar__buttonRects.minimizeButton = {clientRect.right - 3 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - 2 * titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__titleBarHeight};
+    titlebar__buttonRects.closeButton = {clientRect.right - titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right, (useTop ? clientRect.top : 0) + titlebar__frameDimensions[1]};
+    titlebar__buttonRects.maximizeButton = {clientRect.right - 2 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__frameDimensions[1]};
+    titlebar__buttonRects.minimizeButton = {clientRect.right - 3 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - 2 * titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__frameDimensions[1]};
 }
 
 void titlebar__drawButtons(HDC hdc, const RECT &clientRect, HWND hwnd)
@@ -174,8 +186,31 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         OffsetRect(&rect, -rect.left, -rect.top);
 
         if (titlebar__useBitmapFrame)
-            titlebar__titleBarBrush = titlebar__createStretchedBrush(hdc, titlebar__bitmapFrame, rect.right, rect.bottom);
-        FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
+        {
+            HDC hMemDC = CreateCompatibleDC(hdc);
+            HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, titlebar__bitmapFrame);
+
+            BLENDFUNCTION bf = {};
+            bf.BlendOp = AC_SRC_OVER;
+            bf.BlendFlags = 0;
+            bf.SourceConstantAlpha = 255;
+            bf.AlphaFormat = AC_SRC_ALPHA;
+
+            BITMAP bm;
+            GetObject(titlebar__bitmapFrame, sizeof(bm), &bm);
+
+            StretchBlt(
+                hdc,
+                0, 0, rect.right, rect.bottom,
+                hMemDC,
+                0, 0, bm.bmWidth, bm.bmHeight,
+                SRCCOPY);
+
+            SelectObject(hMemDC, hOldBmp);
+            DeleteDC(hMemDC);
+        }
+        else
+            FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
 
         int bufsize = GetWindowTextLength(hwnd) + 1;
         LPWSTR title = new WCHAR[bufsize];
@@ -194,7 +229,7 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         int iconSize = 26;
 
         UINT dpi = GetDpiForWindow(hwnd);
-        iconSize = MulDiv(24, dpi, 96);
+        iconSize = MulDiv(titlebar__iconSize, dpi, 96);
 
         float x = 10;
         if (titlebar__centerTitle)
@@ -202,11 +237,11 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             int totalWidth = iconSize + 6 + textSize.cx;
             x = (rect.right - 3 * titlebar__buttonWidth - totalWidth) / 2;
         }
-        DrawIconEx(hdc, x, (titlebar__titleBarHeight - iconSize) / 2, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
+        DrawIconEx(hdc, x, (titlebar__frameDimensions[1] - iconSize) / 2, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
 
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, titlebar__titleFontColor);
-        RECT textRect = {(LONG)(x + iconSize + 6), 0, rect.right, (LONG)titlebar__titleBarHeight};
+        RECT textRect = {(LONG)(x + iconSize + 6), 0, rect.right, (LONG)titlebar__frameDimensions[1]};
 
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, titlebar__hTitleFont);
@@ -345,18 +380,46 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         RedrawWindow(hwnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
         return result;
     }
+    // custom frame size
+    case WM_NCCALCSIZE:
+    {
+        if (wParam)
+        {
+            NCCALCSIZE_PARAMS *params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+
+            WINDOWPLACEMENT wp = {sizeof(WINDOWPLACEMENT)};
+            GetWindowPlacement(hwnd, &wp);
+            params->rgrc[0].left += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[0] : titlebar__frameDimensions[0];
+            params->rgrc[0].top += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[1] : titlebar__frameDimensions[1];
+            params->rgrc[0].right -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[2] : titlebar__frameDimensions[2];
+            params->rgrc[0].bottom -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[3] : titlebar__frameDimensions[3];
+
+            return 0; // ily stackoverflow
+        }
+        break;
+    } // NCHI test shouldn't be needed for this i thinkk???
     }
 
     return CallWindowProc(titlebar__originalWndProc, hwnd, message, wParam, lParam);
 }
+#endif
 
 // initialization functions
 
+void titlebar__loadGDI()
+{
+    ULONG_PTR m_gdiplusToken;
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+}
 void titlebar__initializeNewWndProc()
 {
-    if(initialized){
+#ifdef HX_WINDOWS
+    if (initialized)
+    {
         return;
     }
+
     if (!titlebar__hButtonFont)
         titlebar__hButtonFont = CreateFontW(10, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
                                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
@@ -364,28 +427,29 @@ void titlebar__initializeNewWndProc()
     HWND hwnd = GetActiveWindow();
     titlebar__originalWndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)titlebar__wndProc);
 
-    MARGINS margins = {0};
-    DwmExtendFrameIntoClientArea(hwnd, &margins);
+    DwmExtendFrameIntoClientArea(hwnd, &titlebar__frameMargins);
 
     RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
     initialized = true;
+#endif
 }
 
+#ifdef HX_WINDOWS
 extern "C" __declspec(dllexport) void titlebar__registerFontFromPath(String fontPath)
 {
     const wchar_t *path = reinterpret_cast<const wchar_t *>(fontPath.wc_str());
     AddFontResourceEx(path, FR_PRIVATE, 0);
 }
+#else
+extern "C" void titlebar__registerFontFromPath(String fontPath) {}
+#endif
 
+#ifdef HX_WINDOWS
 // customization functions
 
 void titlebar__setButtonWidth(int width)
 {
     titlebar__buttonWidth = width;
-}
-void titlebar__setTitleBarHeight(int height)
-{
-    titlebar__titleBarHeight = height;
 }
 void titlebar__setUseButtonText(bool useButtonText)
 {
@@ -431,13 +495,11 @@ void titlebar__setTitlebarImage(String imagePath)
 {
     titlebar__useBitmapFrame = true;
     DeleteObject(titlebar__titleBarBrush);
+    DeleteObject(titlebar__bitmapFrame);
     const wchar_t *path = reinterpret_cast<const wchar_t *>(imagePath.wc_str());
-    HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    if (hBitmap == NULL)
-        titlebar__setTitlebarColor(255, 0, 0); // i've gotten a headache trying to figure out how to make this
-    else
-        titlebar__bitmapFrame = (HBITMAP)hBitmap;
+    Gdiplus::Bitmap bmp(path, FALSE);
+    bmp.GetHBITMAP(Gdiplus::Color(0, 0, 0, 0), &titlebar__bitmapFrame);
 }
 void titlebar__setPrimaryButtonImage(String imagePath)
 {
@@ -495,3 +557,67 @@ void titlebar__setCenterTitle(bool centerTitle)
 {
     titlebar__centerTitle = centerTitle;
 }
+
+void titlebar__setFrameDimensions(int left, int top, int right, int bottom)
+{
+    if (left != NULL)
+        titlebar__frameDimensions[0] = left;
+    if (top != NULL)
+        titlebar__frameDimensions[1] = top;
+    if (right != NULL)
+        titlebar__frameDimensions[2] = right;
+    if (bottom != NULL)
+        titlebar__frameDimensions[3] = bottom;
+}
+
+void titlebar__setZoomedFrameDimensions(int left, int top, int right, int bottom)
+{
+    if (left != NULL)
+        titlebar__zoomedFrameDimensions[0] = left;
+    if (top != NULL)
+        titlebar__zoomedFrameDimensions[1] = top;
+    if (right != NULL)
+        titlebar__zoomedFrameDimensions[2] = right;
+    if (bottom != NULL)
+        titlebar__zoomedFrameDimensions[3] = bottom;
+}
+
+void titlebar__setFrameMargins(int left, int top, int right, int bottom)
+{
+    if (left != NULL)
+        titlebar__frameMargins.cxLeftWidth = left;
+    if (top != NULL)
+        titlebar__frameMargins.cyTopHeight = top;
+    if (right != NULL)
+        titlebar__frameMargins.cxRightWidth = right;
+    if (bottom != NULL)
+        titlebar__frameMargins.cyBottomHeight = bottom;
+}
+
+void titlebar__setIconSize(int size) { titlebar__iconSize = size; }
+
+#else
+
+void titlebar__setButtonWidth(int width) {}
+void titlebar__setUseButtonText(bool useButtonText) {}
+void titlebar__setTitlebarColor(int red, int green, int blue) {}
+void titlebar__setTitleFontColor(int red, int green, int blue) {}
+void titlebar__setButtonFontColor(int red, int green, int blue) {}
+void titlebar__setPrimaryButtonColor(int red, int green, int blue) {}
+void titlebar__setSecondaryButtonColor(int red, int green, int blue) {}
+void titlebar__setPrimaryButtonHoverColor(int red, int green, int blue) {}
+void titlebar__setSecondaryButtonHoverColor(int red, int green, int blue) {}
+void titlebar__setTitlebarImage(String imagePath) {}
+void titlebar__setPrimaryButtonImage(String imagePath) {}
+void titlebar__setSecondaryButtonImage(String imagePath) {}
+void titlebar__setPrimaryButtonHoverImage(String imagePath) {}
+void titlebar__setSecondaryButtonHoverImage(String imagePath) {}
+void titlebar__setTitleFont(String name, int size) {}
+void titlebar__setButtonFont(String name, int size) {}
+void titlebar__redrawWindow() {}
+void titlebar__setCenterTitle(bool centerTitle) {}
+void titlebar__setFrameDimensions(int left, int top, int right, int bottom) {}
+void titlebar__setZoomedFrameDimensions(int left, int top, int right, int bottom) {}
+void titlebar__setFrameMargins(int left, int top, int right, int bottom) {}
+void titlebar__setIconSize(int size) {}
+#endif

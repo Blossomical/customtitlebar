@@ -8,10 +8,14 @@ extern class TitlebarUtility
 {
 	@:native('titlebar__initializeNewWndProc') private static function initialize():Void;
 	@:native('titlebar__registerFontFromPath') private static function registerFont(path:String):Void;
+	@:native('titlebar__loadGDI') private static function loadGDI():Void;
 	
 	// customization
 	@:native('titlebar__setButtonWidth') private static function setButtonWidth(width:Int):Void;
-	@:native('titlebar__setTitleBarHeight') private static function setTitleBarHeight(height:Int):Void;
+	@:native('titlebar__setIconSize') private static function setIconSize(size:Int):Void;
+	@:native('titlebar__setFrameDimensions') private static function setFrameDimensions(left:Int, top:Int, right:Int, bottom:Int):Void;
+	@:native('titlebar__setZoomedFrameDimensions') private static function setZoomedFrameDimensions(left:Int, top:Int, right:Int, bottom:Int):Void;
+	@:native('titlebar__setFrameMargins') private static function setFrameMargins(left:Int, top:Int, right:Int, bottom:Int):Void;
 	@:native('titlebar__setUseButtonText') private static function setUseButtonText(useButtonText:Bool):Void;
 	@:native('titlebar__setTitlebarColor') private static function setTitleBarColor(red:Int, green:Int, blue:Int):Void;
 	
@@ -38,10 +42,14 @@ extern class TitlebarUtility
 {
 	@:hlNative('titlebar', 'initializeNewWndProc') public static function initialize():Void;
 	@:hlNative('titlebar', 'registerFontFromPath') public static function registerFont(path:String):Void;
+	@:hlNative('titlebar', 'loadGDI') private static function loadGDI():Void;
 	
 	// customization
 	@:hlNative('titlebar', 'setButtonWidth') public static function setButtonWidth(width:Int):Void;
-	@:hlNative('titlebar', 'setTitleBarHeight') public static function setTitleBarHeight(height:Int):Void;
+	@:hlNative('titlebar', 'setIconSize') private static function setIconSize(size:Int):Void;
+	@:hlNative('titlebar', 'setFrameDimensions') private static function setFrameDimensions(left:Int, top:Int, right:Int, bottom:Int):Void;
+	@:hlNative('titlebar', 'setZoomedFrameDimensions') private static function setZoomedFrameDimensions(left:Int, top:Int, right:Int, bottom:Int):Void;
+	@:hlNative('titlebar', 'setFrameMargins') private static function setFrameMargins(left:Int, top:Int, right:Int, bottom:Int):Void;
 	@:hlNative('titlebar', 'setUseButtonText') public static function setUseButtonText(useButtonText:Bool):Void;
 	@:hlNative('titlebar', 'setTitlebarColor') public static function setTitleBarColor(red:Int, green:Int, blue:Int):Void;
 	

@@ -224,7 +224,7 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         int bufsize = GetWindowTextLength(hwnd) + 1;
         LPSTR title = (LPSTR)malloc(bufsize);
         LPWSTR titleW = (LPWSTR)malloc(bufsize);
-        LPCSTR titleC = (LPWSTR)malloc(bufsize);
+        LPCSTR titleC = (LPCSTR)malloc(bufsize);
         GetWindowText(hwnd, title, bufsize);
 
         SIZE textSize;
@@ -437,6 +437,7 @@ HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
     initialized = true;
 #endif
 }
+DEFINE_PRIM(_VOID, initializeNewWndProc, _NO_ARG)
 
 HL_PRIM void HL_NAME(registerFontFromPath)(vstring* fontPath)
 {
@@ -565,71 +566,32 @@ HL_PRIM void HL_NAME(setCenterTitle)(bool centerTitle)
     titlebar__centerTitle = centerTitle;
 }
 
-HL_PRIM void HL_NAME(setFrameDimensions)(int left, int top, int right, int bottom)
-{
-    if (left != NULL)
-        titlebar__frameDimensions[0] = left;
-    if (top != NULL)
-        titlebar__frameDimensions[1] = top;
-    if (right != NULL)
-        titlebar__frameDimensions[2] = right;
-    if (bottom != NULL)
-        titlebar__frameDimensions[3] = bottom;
-}
-
-HL_PRIM void HL_NAME(setZoomedFrameDimensions)(int left, int top, int right, int bottom)
-{
-    if (left != NULL)
-        titlebar__zoomedFrameDimensions[0] = left;
-    if (top != NULL)
-        titlebar__zoomedFrameDimensions[1] = top;
-    if (right != NULL)
-        titlebar__zoomedFrameDimensions[2] = right;
-    if (bottom != NULL)
-        titlebar__zoomedFrameDimensions[3] = bottom;
-}
-
-HL_PRIM void HL_NAME(setFrameMargins)(int left, int top, int right, int bottom)
-{
-    if (left != NULL)
-        titlebar__frameMargins.cxLeftWidth = left;
-    if (top != NULL)
-        titlebar__frameMargins.cyTopHeight = top;
-    if (right != NULL)
-        titlebar__frameMargins.cxRightWidth = right;
-    if (bottom != NULL)
-        titlebar__frameMargins.cyBottomHeight = bottom;
-}
-
-HL_PRIM void HL_NAME(setIconSize)(int size) { titlebar__iconSize = size; }
-
 #else
 
-HL_PRIM void HL_NAME(setButtonWidth)(int width) {}
-HL_PRIM void HL_NAME(setUseButtonText)(bool useButtonText) {}
-HL_PRIM void HL_NAME(setTitlebarColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setTitleFontColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setButtonFontColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setPrimaryButtonColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setSecondaryButtonColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setPrimaryButtonHoverColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setSecondaryButtonHoverColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setTitlebarImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setPrimaryButtonImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setSecondaryButtonImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setPrimaryButtonHoverImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size) {}
-HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size) {}
-HL_PRIM void HL_NAME(redrawWindow)(_NO_ARGS) {}
-HL_PRIM void HL_NAME(setCenterTitle)(bool centerTitle) {}
-HL_PRIM void HL_NAME(setFrameDimensions)(int left, int top, int right, int bottom) {}
-HL_PRIM void HL_NAME(setZoomedFrameDimensions)(int left, int top, int right, int bottom) {}
-HL_PRIM void HL_NAME(setFrameMargins)(int left, int top, int right, int bottom) {}
-HL_PRIM void HL_NAME(setIconSize)(int size) {}
+void titlebar__setButtonWidth(int width) {}
+void titlebar__setUseButtonText(bool useButtonText) {}
+void titlebar__setTitlebarColor(int red, int green, int blue) {}
+void titlebar__setTitleFontColor(int red, int green, int blue) {}
+void titlebar__setButtonFontColor(int red, int green, int blue) {}
+void titlebar__setPrimaryButtonColor(int red, int green, int blue) {}
+void titlebar__setSecondaryButtonColor(int red, int green, int blue) {}
+void titlebar__setPrimaryButtonHoverColor(int red, int green, int blue) {}
+void titlebar__setSecondaryButtonHoverColor(int red, int green, int blue) {}
+void titlebar__setTitlebarImage(vstring* imagePath) {}
+void titlebar__setPrimaryButtonImage(vstring* imagePath) {}
+void titlebar__setSecondaryButtonImage(vstring* imagePath) {}
+void titlebar__setPrimaryButtonHoverImage(vstring* imagePath) {}
+void titlebar__setSecondaryButtonHoverImage(vstring* imagePath) {}
+void titlebar__setTitleFont(vstring* name, int size) {}
+void titlebar__setButtonFont(vstring* name, int size) {}
+void titlebar__redrawWindow() {}
+void titlebar__setCenterTitle(bool centerTitle) {}
+void titlebar__setFrameDimensions(int left, int top, int right, int bottom) {}
+void titlebar__setZoomedFrameDimensions(int left, int top, int right, int bottom) {}
+void titlebar__setFrameMargins(int left, int top, int right, int bottom) {}
+void titlebar__setIconSize(int size) {}
 #endif
 
-DEFINE_PRIM(_VOID, initializeNewWndProc, _NO_ARG)
 DEFINE_PRIM(_VOID, registerFontFromPath, _STRING)
 DEFINE_PRIM(_VOID, setButtonWidth, _I32)
 DEFINE_PRIM(_VOID, setTitleBarHeight, _I32)
