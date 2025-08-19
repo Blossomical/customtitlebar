@@ -27,7 +27,7 @@
 		<compilerflag value="-I${HASHLINK}/include" />
 	</files>
 
-	<target id="default" output="custom_window_titlebar" toolid="dll" tool="linker">
+	<target id="default" output="titlebar" toolid="dll" tool="linker">
 		<files id="titlebar" />
 		<libpath name="${HASHLINK}" if="windows" />
 		<libpath name="/usr/local/lib" if='macos' />
