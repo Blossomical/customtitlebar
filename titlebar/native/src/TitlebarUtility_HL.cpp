@@ -539,16 +539,18 @@ HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath)
     DeleteObject(hBitmap);
 }
 
-HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size = 16)
+HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size = 0)
 {
+    if (size == 0) size = 16;
 	const wchar_t* string = hl_aptr(name->bytes, const wchar_t);
     titlebar__hTitleFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
                                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                                        DEFAULT_PITCH | FF_DONTCARE, string);
 }
 
-HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size = 10)
+HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size = 0)
 {
+    if (size == 0) size = 10;
 	const wchar_t* string = hl_aptr(name->bytes, const wchar_t);
     titlebar__hButtonFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
                                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
@@ -629,7 +631,7 @@ HL_PRIM void HL_NAME(setIconSize)(int size) {}
 #endif
 
 DEFINE_PRIM(_VOID, initializeNewWndProc, _NO_ARG)
-DEFINE_PRIM(_VOID, registerFontFromPath, _REF(_STRING))
+DEFINE_PRIM(_VOID, registerFontFromPath, _STRING)
 DEFINE_PRIM(_VOID, setButtonWidth, _I32)
 DEFINE_PRIM(_VOID, setUseButtonText, _BOOL)
 DEFINE_PRIM(_VOID, setTitlebarColor, _I32 _I32 _I32)
@@ -639,12 +641,13 @@ DEFINE_PRIM(_VOID, setPrimaryButtonColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setSecondaryButtonColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setPrimaryButtonHoverColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setSecondaryButtonHoverColor, _I32 _I32 _I32)
-DEFINE_PRIM(_VOID, setPrimaryButtonImage, _REF(_STRING))
-DEFINE_PRIM(_VOID, setSecondaryButtonImage, _REF(_STRING))
-DEFINE_PRIM(_VOID, setPrimaryButtonHoverImage, _REF(_STRING))
-DEFINE_PRIM(_VOID, setSecondaryButtonHoverImage, _REF(_STRING))
-DEFINE_PRIM(_VOID, setTitleFont, _REF(_STRING) _I32)
-DEFINE_PRIM(_VOID, setButtonFont, _REF(_STRING) _I32)
+DEFINE_PRIM(_VOID, setTitlebarImage, _STRING)
+DEFINE_PRIM(_VOID, setPrimaryButtonImage, _STRING)
+DEFINE_PRIM(_VOID, setSecondaryButtonImage, _STRING)
+DEFINE_PRIM(_VOID, setPrimaryButtonHoverImage, _STRING)
+DEFINE_PRIM(_VOID, setSecondaryButtonHoverImage, _STRING)
+DEFINE_PRIM(_VOID, setTitleFont, _STRING _I32)
+DEFINE_PRIM(_VOID, setButtonFont, _STRING _I32)
 DEFINE_PRIM(_VOID, redrawWindow, _NO_ARG)
 DEFINE_PRIM(_VOID, setCenterTitle, _BOOL)
 DEFINE_PRIM(_VOID, setFrameDimensions, _I32 _I32 _I32 _I32)
