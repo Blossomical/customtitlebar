@@ -222,16 +222,14 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
 
         int bufsize = GetWindowTextLength(hwnd) + 1;
-        LPSTR title = (LPSTR)malloc(bufsize);
-        LPWSTR titleW = (LPWSTR)malloc(bufsize);
-        LPCSTR titleC = (LPCSTR)malloc(bufsize);
-        GetWindowText(hwnd, title, bufsize);
+        const wchar_t* title = (const wchar_t*)new LPSTR[bufsize];
+        GetWindowText(hwnd, (LPSTR)title, bufsize);
 
         SIZE textSize;
         HFONT hOldFont;
         if (titlebar__hTitleFont != nullptr)
             hOldFont = (HFONT)SelectObject(hdc, titlebar__hTitleFont);
-        GetTextExtentPoint32(hdc, titleC, wcslen(titleW), &textSize);
+        GetTextExtentPoint32(hdc, (LPCSTR)title, wcslen(title), &textSize);
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, hOldFont);
 
@@ -256,7 +254,7 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, titlebar__hTitleFont);
-        DrawTextW(hdc, titleW, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        DrawTextW(hdc, (LPWSTR)title, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, hOldFont);
 
