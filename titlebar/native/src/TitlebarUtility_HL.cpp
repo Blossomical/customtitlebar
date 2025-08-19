@@ -8,8 +8,6 @@
 
 #include <hl.h>
 
-#include "TitlebarUtility.hpp"
-
 #define UNICODE
 #define _UNICODE
 
@@ -443,7 +441,7 @@ HL_PRIM void HL_NAME(setTitlebarImage)(vstring* imagePath)
 {
     titlebar__useBitmapFrame = true;
     DeleteObject(titlebar__titleBarBrush);
-	const wchar_t* path = hl_aptr(path->bytes, const wchar_t*);
+	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     if (hBitmap == NULL) {
@@ -457,7 +455,7 @@ DEFINE_PRIM(_VOID, setTitlebarImage, _STRING)
 HL_PRIM void HL_NAME(setPrimaryButtonImage)(vstring* imagePath)
 {
     DeleteObject(titlebar__primaryButtonBrush);
-	const wchar_t* path = hl_aptr(path->bytes, const wchar_t);
+	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__primaryButtonBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
@@ -466,7 +464,7 @@ DEFINE_PRIM(_VOID, setPrimaryButtonImage, _STRING)
 HL_PRIM void HL_NAME(setSecondaryButtonImage)(vstring* imagePath)
 {
     DeleteObject(titlebar__secondaryButtonBrush);
-	const wchar_t* path = hl_aptr(path->bytes, const wchar_t);
+	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__secondaryButtonBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
@@ -475,7 +473,7 @@ DEFINE_PRIM(_VOID, setSecondaryButtonImage, _STRING)
 HL_PRIM void HL_NAME(setPrimaryButtonHoverImage)(vstring* imagePath)
 {
     DeleteObject(titlebar__primaryButtonHoverBrush);
-	const wchar_t* path = hl_aptr(path->bytes, const wchar_t);
+	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__primaryButtonHoverBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
@@ -484,7 +482,7 @@ DEFINE_PRIM(_VOID, setPrimaryButtonHoverImage, _STRING)
 HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath)
 {
     DeleteObject(titlebar__secondaryButtonHoverBrush);
-	const wchar_t* path = hl_aptr(path->bytes, const wchar_t);
+	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__secondaryButtonHoverBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
