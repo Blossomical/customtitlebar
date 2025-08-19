@@ -221,8 +221,8 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         else
             FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
 
-        int bufsize = GetWindowTextLength(hwnd) + 1;
-        LPWSTR title = (LPWSTR)new WCHAR[bufsize];
+        int bufsize = GetWindowTextLength(hwnd);
+        WCHAR* title = new WCHAR[bufsize];
         GetWindowText(hwnd, (LPSTR)title, bufsize);
 
         SIZE textSize;
