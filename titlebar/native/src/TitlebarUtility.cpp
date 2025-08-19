@@ -214,13 +214,13 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         int bufsize = GetWindowTextLength(hwnd) + 1;
         LPWSTR title = new WCHAR[bufsize];
-        GetWindowTextW(hwnd, title, bufsize);
+        GetWindowText(hwnd, title, bufsize);
 
         SIZE textSize;
         HFONT hOldFont;
         if (titlebar__hTitleFont != nullptr)
             hOldFont = (HFONT)SelectObject(hdc, titlebar__hTitleFont);
-        GetTextExtentPoint32(hdc, (LPCSTR)title, wcslen(title), &textSize);
+        GetTextExtentPoint32(hdc, title, wcslen(title), &textSize);
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, hOldFont);
 
