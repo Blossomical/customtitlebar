@@ -95,9 +95,9 @@ bool initialized = false;
 
 void titlebar__updateButtonRects(const RECT &clientRect, bool useTop = false)
 {
-    titlebar__buttonRects.closeButton = {clientRect.right - titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right, (useTop ? clientRect.top : 0) + titlebar__titleBarHeight};
-    titlebar__buttonRects.maximizeButton = {clientRect.right - 2 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__titleBarHeight};
-    titlebar__buttonRects.minimizeButton = {clientRect.right - 3 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - 2 * titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__titleBarHeight};
+    titlebar__buttonRects.closeButton = {clientRect.right - titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right, (useTop ? clientRect.top : 0) + titlebar__frameDimensions[1]};
+    titlebar__buttonRects.maximizeButton = {clientRect.right - 2 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__frameDimensions[1]};
+    titlebar__buttonRects.minimizeButton = {clientRect.right - 3 * titlebar__buttonWidth, useTop ? clientRect.top : 0, clientRect.right - 2 * titlebar__buttonWidth, (useTop ? clientRect.top : 0) + titlebar__frameDimensions[1]};
 }
 
 void titlebar__drawButtons(HDC hdc, const RECT &clientRect, HWND hwnd)
@@ -108,7 +108,7 @@ void titlebar__drawButtons(HDC hdc, const RECT &clientRect, HWND hwnd)
     if (titlebar__useButtonText)
     {
         hOldFont = (HFONT)SelectObject(hdc, titlebar__hButtonFont);
-        SetBkMode(hdc, 1);
+        SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, titlebar__buttonFontColor);
     }
 
@@ -224,7 +224,7 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         int bufsize = GetWindowTextLength(hwnd) + 1;
         LPSTR title = (LPSTR)malloc(bufsize);
         LPWSTR titleW = (LPWSTR)malloc(bufsize);
-        LPCSTR titleC = (LPWSTR)malloc(bufsize);
+        LPCSTR titleC = (LPCSTR)malloc(bufsize);
         GetWindowText(hwnd, title, bufsize);
 
         SIZE textSize;
@@ -256,7 +256,7 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, titlebar__hTitleFont);
-        DrawTextW(hdc, title, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        DrawTextW(hdc, titleW, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         if (titlebar__hTitleFont != nullptr)
             SelectObject(hdc, hOldFont);
 
@@ -440,19 +440,18 @@ HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
 
 HL_PRIM void HL_NAME(registerFontFromPath)(vstring* fontPath)
 {
+#ifdef _WIN32
 	LPCSTR path = LPCSTR(hl_aptr(fontPath->bytes, const char));
     AddFontResourceEx(path, FR_PRIVATE, 0);
+#endif
 }
 
 // customization functions
 
+#ifdef _WIN32
 HL_PRIM void HL_NAME(setButtonWidth)(int width)
 {
     titlebar__buttonWidth = width;
-}
-HL_PRIM void HL_NAME(setTitleBarHeight)(int height)
-{
-    titlebar__titleBarHeight = height;
 }
 HL_PRIM void HL_NAME(setUseButtonText)(bool useButtonText)
 {
@@ -632,7 +631,6 @@ HL_PRIM void HL_NAME(setIconSize)(int size) {}
 DEFINE_PRIM(_VOID, initializeNewWndProc, _NO_ARG)
 DEFINE_PRIM(_VOID, registerFontFromPath, _STRING)
 DEFINE_PRIM(_VOID, setButtonWidth, _I32)
-DEFINE_PRIM(_VOID, setTitleBarHeight, _I32)
 DEFINE_PRIM(_VOID, setUseButtonText, _BOOL)
 DEFINE_PRIM(_VOID, setTitlebarColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setTitleFontColor, _I32 _I32 _I32)
@@ -640,7 +638,6 @@ DEFINE_PRIM(_VOID, setButtonFontColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setPrimaryButtonColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setSecondaryButtonColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setPrimaryButtonHoverColor, _I32 _I32 _I32)
-DEFINE_PRIM(_VOID, setSecondaryButtonHoverColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setSecondaryButtonHoverColor, _I32 _I32 _I32)
 DEFINE_PRIM(_VOID, setPrimaryButtonImage, _STRING)
 DEFINE_PRIM(_VOID, setSecondaryButtonImage, _STRING)
@@ -650,3 +647,7 @@ DEFINE_PRIM(_VOID, setTitleFont, _STRING _I32)
 DEFINE_PRIM(_VOID, setButtonFont, _STRING _I32)
 DEFINE_PRIM(_VOID, redrawWindow, _NO_ARG)
 DEFINE_PRIM(_VOID, setCenterTitle, _BOOL)
+DEFINE_PRIM(_VOID, setFrameDimensions, _I32 _I32 _I32 _I32)
+DEFINE_PRIM(_VOID, setZoomedFrameDimensions, _I32 _I32 _I32 _I32)
+DEFINE_PRIM(_VOID, setFrameMargins, _I32 _I32 _I32 _I32)
+DEFINE_PRIM(_VOID, setIconSize, _I32)
