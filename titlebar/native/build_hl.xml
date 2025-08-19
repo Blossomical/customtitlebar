@@ -1,0 +1,39 @@
+<xml>
+	<pragma once="true" />
+
+	<cppflag value="HASHLINK" />
+
+	<set name="PROJECT_DIR" value="${this_dir}/src" />
+	<set name="HL_INCLUDE" value="${HASHLINK}/include" />
+	<set name="HL_BIN" value="${HASHLINK}" />
+
+	<echo value="hashlink: ${HASHLINK}" />
+    <echo value="hashlink include: ${HL_INCLUDE}" />
+    <echo value="hashlink bin: ${HL_BIN}" />
+
+	<set name="titlebar_folder" value="${haxelib:customtitlebar}/titlebar/native/src" />
+
+	<files id="__main__">
+		<compilerflag value="-I${titlebar_folder}" />
+	</files>
+
+	<files id="haxe">
+		<compilerflag value="-I${titlebar_folder}" />
+	</files>
+
+	<files id="titlebar">
+		<compilerflag value="-I${titlebar_folder}" />
+		<file name="${titlebar_folder}/TitlebarUtility_HL.cpp" />
+		<compilerflag value="-I${HASHLINK}/include" />
+	</files>
+
+	<target id="default" output="titlebar" toolid="dll" tool="linker">
+		<files id="titlebar" />
+		<libpath name="${HASHLINK}" if="windows" />
+		<libpath name="/usr/local/lib" if='macos' />
+		<lib name="libhl.lib" if="windows" />
+		<lib name="-lhl" unless="windows" />
+		<ext value=".hdll" />
+		<outdir name="bin/hl/bin" />
+	</target>
+</xml>
