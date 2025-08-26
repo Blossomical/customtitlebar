@@ -25,8 +25,9 @@ To get the font's name for the first argument of the function `setTitleFont` you
 # HashLink Setup
 (written by someguywholovescoding)
 
-If you've installed this library, run `haxelib run hxcpp build_hl.xml _D "(your hashlink path)"` at the same path of the titlebar utility class file.
+If you've installed this library, run `haxelib run hxcpp build_hl.xml -D "(your hashlink path)"` at the same path of the titlebar utility class file.
 
 
 And after that, you move your hdll over to your export/hl/bin folder of your app.
+
 
