@@ -19,6 +19,7 @@
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <functional>
+#include <iostream>
 #include <gdiplus.h> // i have high hopes for this library
 #endif
 
@@ -194,51 +195,36 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         GetWindowRect(hwnd, &rect);
         OffsetRect(&rect, -rect.left, -rect.top);
 
+        // fill frame
         if (titlebar__useBitmapFrame)
         {
             HDC hMemDC = CreateCompatibleDC(hdc);
             HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, titlebar__bitmapFrame);
-
-            BLENDFUNCTION bf = {};
-            bf.BlendOp = AC_SRC_OVER;
-            bf.BlendFlags = 0;
-            bf.SourceConstantAlpha = 255;
-            bf.AlphaFormat = AC_SRC_ALPHA;
-
             BITMAP bm;
             GetObject(titlebar__bitmapFrame, sizeof(bm), &bm);
-
-            StretchBlt(
-                hdc,
-                0, 0, rect.right, rect.bottom,
-                hMemDC,
-                0, 0, bm.bmWidth, bm.bmHeight,
-                SRCCOPY);
-
+            StretchBlt(hdc, 0, 0, rect.right, rect.bottom, hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
             SelectObject(hMemDC, hOldBmp);
             DeleteDC(hMemDC);
         }
-        else
-            FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
+        else FillRect(hdc, &rect, titlebar__titleBarBrush);
 
-        int bufsize = GetWindowTextLength(hwnd) + 1;
+        // prepare title text
+        int bufsize = GetWindowTextLengthW(hwnd) + 1;
         LPWSTR title = new WCHAR[bufsize];
         GetWindowTextW(hwnd, title, bufsize);
 
-        SIZE textSize;
-        HFONT hOldFont;
-        if (titlebar__hTitleFont != nullptr)
+        HFONT hOldFont = nullptr;
+        if (titlebar__hTitleFont)
             hOldFont = (HFONT)SelectObject(hdc, titlebar__hTitleFont);
-        GetTextExtentPoint32(hdc, (LPCSTR)title, wcslen(title), &textSize);
-        if (titlebar__hTitleFont != nullptr)
-            SelectObject(hdc, hOldFont);
+
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, titlebar__titleFontColor);
+
+        SIZE textSize;
+        GetTextExtentPoint32W(hdc, title, wcslen(title), &textSize);
 
         HICON hIcon = titlebar__getCaptionIcon(hwnd);
-
-        int iconSize = 26;
-
-        UINT dpi = GetDpiForWindow(hwnd);
-        iconSize = MulDiv(titlebar__iconSize, dpi, 96);
+        int iconSize = MulDiv(titlebar__iconSize, GetDpiForWindow(hwnd), 96);
 
         float x = 10;
         if (titlebar__centerTitle)
@@ -246,17 +232,14 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             int totalWidth = iconSize + 6 + textSize.cx;
             x = (rect.right - 3 * titlebar__buttonWidth - totalWidth) / 2;
         }
+
         DrawIconEx(hdc, x, (titlebar__frameDimensions[1] - iconSize) / 2, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
 
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, titlebar__titleFontColor);
-        RECT textRect = {(LONG)(x + iconSize + 6), 0, rect.right, (LONG)titlebar__frameDimensions[1]};
+        RECT textRect = {(LONG)(x + iconSize + 6), 0, rect.right - 3 * titlebar__buttonWidth, (LONG)titlebar__frameDimensions[1]};
+        DrawTextW(hdc, title, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-        if (titlebar__hTitleFont != nullptr)
-            SelectObject(hdc, titlebar__hTitleFont);
-        DrawTextW(hdc, (LPWSTR)title, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-        if (titlebar__hTitleFont != nullptr)
-            SelectObject(hdc, hOldFont);
+        if (hOldFont) SelectObject(hdc, hOldFont);
+        delete[] title;
 
         titlebar__drawButtons(hdc, rect, hwnd);
 
@@ -445,7 +428,7 @@ HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
 HL_PRIM void HL_NAME(registerFontFromPath)(vstring* fontPath)
 {
 #ifdef _WIN32
-	LPCSTR path = LPCSTR(hl_aptr(fontPath->bytes, const char));
+	LPCSTR path = LPCSTR((const wchar_t*)hl_to_utf8(fontPath->bytes));
     AddFontResourceEx(path, FR_PRIVATE, 0);
 #endif
 }
@@ -543,19 +526,18 @@ HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath)
     DeleteObject(hBitmap);
 }
 
-HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size = 0)
+HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size)
 {
-    if (size == 0) size = 16;
-	const wchar_t* string = hl_aptr(name->bytes, const wchar_t);
+    const wchar_t* string = (const wchar_t*)hl_to_utf8(name->bytes);
+    //printf((const char*)string + "\n");
     titlebar__hTitleFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
-                                       OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
-                                       DEFAULT_PITCH | FF_DONTCARE, string);
+                                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+                                        DEFAULT_PITCH | FF_DONTCARE, string);
 }
 
-HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size = 0)
+HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size)
 {
-    if (size == 0) size = 10;
-	const wchar_t* string = hl_aptr(name->bytes, const wchar_t);
+	const wchar_t* string = (const wchar_t*)hl_to_utf8(name->bytes);
     titlebar__hButtonFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
                                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                                         DEFAULT_PITCH | FF_DONTCARE, string);

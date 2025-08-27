@@ -9,12 +9,13 @@
         "extension"
     ],
     "description": "Titlebar / Window Frame Customization tool for Windows",
-    "version": "1.0.0",
-    "releasenote": "First release!",
+    "version": "1.0.1",
+    "releasenote": "Hashlink support & Extra Features",
     "contributors": [
         "Blossomical"
     ],
     "dependencies": {
         "hxcpp": ""
     }
+
 }
