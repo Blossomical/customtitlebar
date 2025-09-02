@@ -399,14 +399,20 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     {
         if (wParam)
         {
-            NCCALCSIZE_PARAMS *params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+            NCCALCSIZE_PARAMS *_params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+            NCCALCSIZE_PARAMS params = *_params;
+            LRESULT res = CallWindowProc(titlebar__originalWndProc, hwnd, message, wParam, lParam);
+            NCCALCSIZE_PARAMS *newParams = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+
+            if (newParams->rgrc[0].left == 0 && newParams->rgrc[0].top == 0 && newParams->rgrc[0].right == 0 && newParams->rgrc[0].bottom == 0)
+                return res;
 
             WINDOWPLACEMENT wp = {sizeof(WINDOWPLACEMENT)};
             GetWindowPlacement(hwnd, &wp);
-            params->rgrc[0].left += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[0] : titlebar__frameDimensions[0];
-            params->rgrc[0].top += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[1] : titlebar__frameDimensions[1];
-            params->rgrc[0].right -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[2] : titlebar__frameDimensions[2];
-            params->rgrc[0].bottom -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[3] : titlebar__frameDimensions[3];
+            params.rgrc[0].left += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[0] : titlebar__frameDimensions[0];
+            params.rgrc[0].top += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[1] : titlebar__frameDimensions[1];
+            params.rgrc[0].right -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[2] : titlebar__frameDimensions[2];
+            params.rgrc[0].bottom -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[3] : titlebar__frameDimensions[3];
 
             return 0; // ily stackoverflow
         }
