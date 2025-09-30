@@ -29,5 +29,3 @@ If you've installed this library, run `haxelib run hxcpp build_hl.xml -D HASHLIN
 
 
 And after that, you move your hdll over to your export/hl/bin folder of your app.
-
-

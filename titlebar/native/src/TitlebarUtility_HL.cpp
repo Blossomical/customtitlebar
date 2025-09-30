@@ -603,7 +603,6 @@ HL_PRIM void HL_NAME(setButtonFont)(vstring *name, int size = 0) {
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         wname.c_str()
     );
-}
 
 HL_PRIM void HL_NAME(redrawWindow)(_NO_ARG)
 {
