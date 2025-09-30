@@ -2,9 +2,9 @@
  * There is a LOT (and I mean, a lot) that has changed within this file.
  * I mean—to be fair, hashlink extern code has to be modified a bunch in terms of types to get it to actually work.
  * Sincerely, SomeGuyWhoLovesCoding
- * 
+ *
  * I also had to do some extra work because now there's more functions and an architectural change wtfffff
-**/
+ **/
 
 #define HL_NAME(n) titlebar_##n
 
@@ -19,8 +19,8 @@
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <functional>
-#include <iostream>
 #include <gdiplus.h> // i have high hopes for this library
+#include <iostream>
 #endif
 
 using namespace Gdiplus;
@@ -36,10 +36,10 @@ extern "C"
 {
 #ifdef _WIN32
     __declspec(dllexport) void titlebar__initializeNewWndProc();
-    __declspec(dllexport) void titlebar__registerFontFromPath(vstring* fontPath);
+    __declspec(dllexport) void titlebar__registerFontFromPath(vstring *fontPath);
 #else
     void titlebar__initializeNewWndProc();
-    void titlebar__registerFontFromPath(vstring* fontPath);
+    void titlebar__registerFontFromPath(vstring *fontPath);
 #endif
 }
 
@@ -195,36 +195,51 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         GetWindowRect(hwnd, &rect);
         OffsetRect(&rect, -rect.left, -rect.top);
 
-        // fill frame
         if (titlebar__useBitmapFrame)
         {
             HDC hMemDC = CreateCompatibleDC(hdc);
             HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, titlebar__bitmapFrame);
+
+            BLENDFUNCTION bf = {};
+            bf.BlendOp = AC_SRC_OVER;
+            bf.BlendFlags = 0;
+            bf.SourceConstantAlpha = 255;
+            bf.AlphaFormat = AC_SRC_ALPHA;
+
             BITMAP bm;
             GetObject(titlebar__bitmapFrame, sizeof(bm), &bm);
-            StretchBlt(hdc, 0, 0, rect.right, rect.bottom, hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+
+            StretchBlt(
+                hdc,
+                0, 0, rect.right, rect.bottom,
+                hMemDC,
+                0, 0, bm.bmWidth, bm.bmHeight,
+                SRCCOPY);
+
             SelectObject(hMemDC, hOldBmp);
             DeleteDC(hMemDC);
         }
-        else FillRect(hdc, &rect, titlebar__titleBarBrush);
+        else
+            FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
 
-        // prepare title text
-        int bufsize = GetWindowTextLengthW(hwnd) + 1;
+        int bufsize = GetWindowTextLength(hwnd) + 1;
         LPWSTR title = new WCHAR[bufsize];
         GetWindowTextW(hwnd, title, bufsize);
 
-        HFONT hOldFont = nullptr;
-        if (titlebar__hTitleFont)
-            hOldFont = (HFONT)SelectObject(hdc, titlebar__hTitleFont);
-
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, titlebar__titleFontColor);
-
         SIZE textSize;
-        GetTextExtentPoint32W(hdc, title, wcslen(title), &textSize);
+        HFONT hOldFont;
+        if (titlebar__hTitleFont != nullptr)
+            hOldFont = (HFONT)SelectObject(hdc, titlebar__hTitleFont);
+        GetTextExtentPoint32W(hdc, title, wcslen(title), &textSize); //new
+        if (titlebar__hTitleFont != nullptr)
+            SelectObject(hdc, hOldFont);
 
         HICON hIcon = titlebar__getCaptionIcon(hwnd);
-        int iconSize = MulDiv(titlebar__iconSize, GetDpiForWindow(hwnd), 96);
+
+        int iconSize = 26;
+
+        UINT dpi = GetDpiForWindow(hwnd);
+        iconSize = MulDiv(titlebar__iconSize, dpi, 96);
 
         float x = 10;
         if (titlebar__centerTitle)
@@ -232,14 +247,17 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             int totalWidth = iconSize + 6 + textSize.cx;
             x = (rect.right - 3 * titlebar__buttonWidth - totalWidth) / 2;
         }
-
         DrawIconEx(hdc, x, (titlebar__frameDimensions[1] - iconSize) / 2, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
 
-        RECT textRect = {(LONG)(x + iconSize + 6), 0, rect.right - 3 * titlebar__buttonWidth, (LONG)titlebar__frameDimensions[1]};
-        DrawTextW(hdc, title, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, titlebar__titleFontColor);
+        RECT textRect = {(LONG)(x + iconSize + 6), 0, rect.right, (LONG)titlebar__frameDimensions[1]};
 
-        if (hOldFont) SelectObject(hdc, hOldFont);
-        delete[] title;
+        if (titlebar__hTitleFont != nullptr)
+            SelectObject(hdc, titlebar__hTitleFont);
+        DrawTextW(hdc, (LPWSTR)title, -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        if (titlebar__hTitleFont != nullptr)
+            SelectObject(hdc, hOldFont);
 
         titlebar__drawButtons(hdc, rect, hwnd);
 
@@ -377,15 +395,20 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     {
         if (wParam)
         {
-            NCCALCSIZE_PARAMS *params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+            NCCALCSIZE_PARAMS *_params = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+            NCCALCSIZE_PARAMS params = *_params;
+            LRESULT res = CallWindowProc(titlebar__originalWndProc, hwnd, message, wParam, lParam);
+            NCCALCSIZE_PARAMS *newParams = reinterpret_cast<NCCALCSIZE_PARAMS *>(lParam);
+
+            if (newParams->rgrc[0].left == 0 && newParams->rgrc[0].top == 0 && newParams->rgrc[0].right == 0 && newParams->rgrc[0].bottom == 0)
+                return res;
 
             WINDOWPLACEMENT wp = {sizeof(WINDOWPLACEMENT)};
             GetWindowPlacement(hwnd, &wp);
-            params->rgrc[0].left += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[0] : titlebar__frameDimensions[0];
-            params->rgrc[0].top += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[1] : titlebar__frameDimensions[1];
-            params->rgrc[0].right -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[2] : titlebar__frameDimensions[2];
-            params->rgrc[0].bottom -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[3] : titlebar__frameDimensions[3];
-
+            params.rgrc[0].left += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[0] : titlebar__frameDimensions[0];
+            params.rgrc[0].top += wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[1] : titlebar__frameDimensions[1];
+            params.rgrc[0].right -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[2] : titlebar__frameDimensions[2];
+            params.rgrc[0].bottom -= wp.showCmd == SW_MAXIMIZE ? titlebar__zoomedFrameDimensions[3] : titlebar__frameDimensions[3];
             return 0; // ily stackoverflow
         }
         break;
@@ -407,7 +430,8 @@ HL_PRIM void HL_NAME(loadGDI)(_NO_ARG)
 HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
 {
 #ifdef _WIN32
-    if(initialized){
+    if (initialized)
+    {
         return;
     }
     if (!titlebar__hButtonFont)
@@ -425,15 +449,35 @@ HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
 #endif
 }
 
-HL_PRIM void HL_NAME(registerFontFromPath)(vstring* fontPath)
+HL_PRIM void HL_NAME(registerFontFromPath)(vstring *fontPath)
 {
 #ifdef _WIN32
-	LPCSTR path = LPCSTR((const wchar_t*)hl_to_utf8(fontPath->bytes));
+    LPCSTR path = LPCSTR(hl_aptr(fontPath->bytes, const char));
     AddFontResourceEx(path, FR_PRIVATE, 0);
 #endif
 }
 
 // customization functions
+
+static std::wstring utf8_to_wide(const char *utf8) {
+    if (!utf8) return L"";
+
+    int needed = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, nullptr, 0);
+    if (needed <= 0) return L"";
+
+    std::wstring wstr(needed, L'\0');  // allocate space for null terminator
+
+    // &wstr[0] is non-const and writable
+    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, &wstr[0], needed);
+
+    // remove null terminator
+    if (!wstr.empty() && wstr.back() == L'\0')
+        wstr.pop_back();
+
+    //std::wcout << wstr << std::endl;
+
+    return wstr;
+}
 
 #ifdef _WIN32
 HL_PRIM void HL_NAME(setButtonWidth)(int width)
@@ -479,68 +523,86 @@ HL_PRIM void HL_NAME(setSecondaryButtonHoverColor)(int red, int green, int blue)
     titlebar__secondaryButtonHoverBrush = CreateSolidBrush(RGB(red, green, blue));
 }
 
-HL_PRIM void HL_NAME(setTitlebarImage)(vstring* imagePath)
+HL_PRIM void HL_NAME(setTitlebarImage)(vstring *imagePath)
 {
     titlebar__useBitmapFrame = true;
     DeleteObject(titlebar__titleBarBrush);
-	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
+    std::wstring wpath = utf8_to_wide(hl_to_utf8(imagePath->bytes));
+    const wchar_t *path = wpath.c_str();
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    if (hBitmap == NULL) {
+    if (hBitmap == NULL)
+    {
         titlebar__useBitmapFrame = false;
         DeleteObject(titlebar__titleBarBrush);
         titlebar__titleBarBrush = CreateSolidBrush(RGB(255, 0, 0)); // you can't define any of the other functions in the current function on a hashlink extern unfortunately
-    } else
+    }
+    else
         titlebar__bitmapFrame = (HBITMAP)hBitmap;
 }
-HL_PRIM void HL_NAME(setPrimaryButtonImage)(vstring* imagePath)
+HL_PRIM void HL_NAME(setPrimaryButtonImage)(vstring *imagePath)
 {
     DeleteObject(titlebar__primaryButtonBrush);
-	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
+    std::wstring wpath = utf8_to_wide(hl_to_utf8(imagePath->bytes));
+    const wchar_t *path = wpath.c_str();
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__primaryButtonBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
 }
-HL_PRIM void HL_NAME(setSecondaryButtonImage)(vstring* imagePath)
+HL_PRIM void HL_NAME(setSecondaryButtonImage)(vstring *imagePath)
 {
     DeleteObject(titlebar__secondaryButtonBrush);
-	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
+    std::wstring wpath = utf8_to_wide(hl_to_utf8(imagePath->bytes));
+    const wchar_t *path = wpath.c_str();
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__secondaryButtonBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
 }
-HL_PRIM void HL_NAME(setPrimaryButtonHoverImage)(vstring* imagePath)
+HL_PRIM void HL_NAME(setPrimaryButtonHoverImage)(vstring *imagePath)
 {
     DeleteObject(titlebar__primaryButtonHoverBrush);
-	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
+    std::wstring wpath = utf8_to_wide(hl_to_utf8(imagePath->bytes));
+    const wchar_t *path = wpath.c_str();
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__primaryButtonHoverBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
 }
-HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath)
+HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring *imagePath)
 {
     DeleteObject(titlebar__secondaryButtonHoverBrush);
-	const wchar_t* path = (const wchar_t*)hl_to_utf8(imagePath->bytes);
+    std::wstring wpath = utf8_to_wide(hl_to_utf8(imagePath->bytes));
+    const wchar_t *path = wpath.c_str();
     HBITMAP hBitmap = (HBITMAP)LoadImageW(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titlebar__secondaryButtonHoverBrush = CreatePatternBrush((HBITMAP)hBitmap);
     DeleteObject(hBitmap);
 }
 
-HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size)
-{
-    const wchar_t* string = (const wchar_t*)hl_to_utf8(name->bytes);
-    //printf((const char*)string + "\n");
-    titlebar__hTitleFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
-                                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
-                                        DEFAULT_PITCH | FF_DONTCARE, string);
+HL_PRIM void HL_NAME(setTitleFont)(vstring *name, int size = 0) {
+    if (size == 0)
+        size = 16;
+
+    std::wstring wname = utf8_to_wide(hl_to_utf8(name->bytes));  // Changed this line
+
+    titlebar__hTitleFont = CreateFontW(
+        size, 0, 0, 0, FW_MEDIUM, false, false, false,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        wname.c_str()
+    );
 }
 
-HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size)
-{
-	const wchar_t* string = (const wchar_t*)hl_to_utf8(name->bytes);
-    titlebar__hButtonFont = CreateFontW(size, 0, 0, 0, FW_MEDIUM, false, false, false, DEFAULT_CHARSET,
-                                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
-                                        DEFAULT_PITCH | FF_DONTCARE, string);
+HL_PRIM void HL_NAME(setButtonFont)(vstring *name, int size = 0) {
+    if (size == 0)
+        size = 10;
+
+    std::wstring wname = utf8_to_wide(hl_to_utf8(name->bytes));  // Changed this line
+
+    titlebar__hButtonFont = CreateFontW(
+        size, 0, 0, 0, FW_MEDIUM, false, false, false,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        wname.c_str()
+    );
 }
 
 HL_PRIM void HL_NAME(redrawWindow)(_NO_ARG)
@@ -601,13 +663,13 @@ HL_PRIM void HL_NAME(setPrimaryButtonColor)(int red, int green, int blue) {}
 HL_PRIM void HL_NAME(setSecondaryButtonColor)(int red, int green, int blue) {}
 HL_PRIM void HL_NAME(setPrimaryButtonHoverColor)(int red, int green, int blue) {}
 HL_PRIM void HL_NAME(setSecondaryButtonHoverColor)(int red, int green, int blue) {}
-HL_PRIM void HL_NAME(setTitlebarImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setPrimaryButtonImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setSecondaryButtonImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setPrimaryButtonHoverImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring* imagePath) {}
-HL_PRIM void HL_NAME(setTitleFont)(vstring* name, int size) {}
-HL_PRIM void HL_NAME(setButtonFont)(vstring* name, int size) {}
+HL_PRIM void HL_NAME(setTitlebarImage)(vstring *imagePath) {}
+HL_PRIM void HL_NAME(setPrimaryButtonImage)(vstring *imagePath) {}
+HL_PRIM void HL_NAME(setSecondaryButtonImage)(vstring *imagePath) {}
+HL_PRIM void HL_NAME(setPrimaryButtonHoverImage)(vstring *imagePath) {}
+HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring *imagePath) {}
+HL_PRIM void HL_NAME(setTitleFont)(vstring *name, int size) {}
+HL_PRIM void HL_NAME(setButtonFont)(vstring *name, int size) {}
 HL_PRIM void HL_NAME(redrawWindow)(_NO_ARGS) {}
 HL_PRIM void HL_NAME(setCenterTitle)(bool centerTitle) {}
 HL_PRIM void HL_NAME(setFrameDimensions)(int left, int top, int right, int bottom) {}
