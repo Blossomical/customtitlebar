@@ -64,8 +64,8 @@ extern class TitlebarUtility
 	@:hlNative('titlebar', 'setSecondaryButtonImage') public static function setSecondaryButtonImage(imagePath:String):Void;
 	@:hlNative('titlebar', 'setPrimaryButtonHoverImage') public static function setPrimaryButtonHoverImage(imagePath:String):Void;
 	@:hlNative('titlebar', 'setSecondaryButtonHoverImage') public static function setSecondaryButtonHoverImage(imagePath:String):Void;
-	@:hlNative('titlebar', 'setTitleFont') public static function setTitleFont(name:String, size:Int = 16):Void;
-	@:hlNative('titlebar', 'setButtonFont') public static function setButtonFont(name:String, size:Int = 10):Void;
+	@:hlNative('titlebar', 'setTitleFont') public static function setTitleFont(name:String, size:Int):Void;
+	@:hlNative('titlebar', 'setButtonFont') public static function setButtonFont(name:String, size:Int):Void;
 	
 	@:hlNative('titlebar', 'redrawWindow') public static function redrawWindow():Void;
 	@:hlNative('titlebar', 'setCenterTitle') public static function setCenterTitle(centerTitle:Bool):Void;
