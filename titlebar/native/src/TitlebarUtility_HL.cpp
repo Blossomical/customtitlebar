@@ -222,7 +222,21 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 			DeleteDC(hMemDC);
 		}
 		else
+		{
+			// we don't want the main context to flicker now do we?, kind of a poopy fix but it's all i was able to do for now
+			WINDOWPLACEMENT wp = {sizeof(WINDOWPLACEMENT)};
+			GetWindowPlacement(hwnd, &wp);
+			int *currentFrameDimensions = (wp.showCmd == SW_MAXIMIZE) ? titlebar__zoomedFrameDimensions : titlebar__frameDimensions;
+
+			RECT clientWndRect = {
+				currentFrameDimensions[0],
+				currentFrameDimensions[1],
+				rect.right - currentFrameDimensions[2],
+				rect.bottom - currentFrameDimensions[3]};
+			ExcludeClipRect(hdc, clientWndRect.left, clientWndRect.top, clientWndRect.right, clientWndRect.bottom);
+
 			FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
+		}
 
 		int bufsize = GetWindowTextLength(hwnd) + 1;
 		LPWSTR title = new WCHAR[bufsize];
@@ -375,6 +389,10 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 		}
 		return 0;
 	}
+	case WM_ERASEBKGND:
+	{ // hopefully this works permanently cuz istg
+		return 1;
+	}
 	// to handle redraws n stuff like that
 	case WM_NCACTIVATE:
 	{
@@ -454,13 +472,16 @@ HL_PRIM void HL_NAME(initializeNewWndProc)(_NO_ARG)
 
 // customization functions
 
-static std::wstring utf8_to_wide(const char *utf8) {
-	if (!utf8) return L"";
+static std::wstring utf8_to_wide(const char *utf8)
+{
+	if (!utf8)
+		return L"";
 
 	int needed = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, nullptr, 0);
-	if (needed <= 0) return L"";
+	if (needed <= 0)
+		return L"";
 
-	std::wstring wstr(needed, L'\0');  // allocate space for null terminator
+	std::wstring wstr(needed, L'\0'); // allocate space for null terminator
 
 	// &wstr[0] is non-const and writable
 	MultiByteToWideChar(CP_UTF8, 0, utf8, -1, &wstr[0], needed);
@@ -469,7 +490,7 @@ static std::wstring utf8_to_wide(const char *utf8) {
 	if (!wstr.empty() && wstr.back() == L'\0')
 		wstr.pop_back();
 
-	//std::wcout << wstr << std::endl;
+	// std::wcout << wstr << std::endl;
 
 	return wstr;
 }
@@ -477,9 +498,9 @@ static std::wstring utf8_to_wide(const char *utf8) {
 #ifdef _WIN32
 HL_PRIM void HL_NAME(registerFontFromPath)(vstring *fontPath)
 {
-    std::wstring wpath = utf8_to_wide(hl_to_utf8(fontPath->bytes));
-    const wchar_t* path = wpath.c_str();
-    AddFontResourceExW(path, FR_PRIVATE, 0);
+	std::wstring wpath = utf8_to_wide(hl_to_utf8(fontPath->bytes));
+	const wchar_t *path = wpath.c_str();
+	AddFontResourceExW(path, FR_PRIVATE, 0);
 }
 
 HL_PRIM void HL_NAME(setButtonWidth)(int width)
@@ -579,47 +600,49 @@ HL_PRIM void HL_NAME(setSecondaryButtonHoverImage)(vstring *imagePath)
 	DeleteObject(hBitmap);
 }
 
-HL_PRIM void HL_NAME(setTitleFont)(vstring *name, int size = 0) {
+HL_PRIM void HL_NAME(setTitleFont)(vstring *name, int size = 0)
+{
 	if (size == 0)
 		size = 16;
 
-	if (titlebar__hTitleFont != nullptr) {
+	if (titlebar__hTitleFont != nullptr)
+	{
 		DeleteObject(titlebar__hTitleFont);
 		titlebar__hTitleFont = nullptr;
 	}
 
 	std::wstring wname = utf8_to_wide(hl_to_utf8(name->bytes));
-	
-	//std::wcout << L"Creating title font: " << wname << L" size: " << size << std::endl;
 
-    titlebar__hTitleFont = CreateFontW(
-        size, 0, 0, 0, FW_MEDIUM, false, false, false,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-        wname.c_str()
-    );
-    
-    //std::wcout << L"Font handle: " << titlebar__hTitleFont << std::endl;
+	// std::wcout << L"Creating title font: " << wname << L" size: " << size << std::endl;
+
+	titlebar__hTitleFont = CreateFontW(
+		size, 0, 0, 0, FW_MEDIUM, false, false, false,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+		wname.c_str());
+
+	// std::wcout << L"Font handle: " << titlebar__hTitleFont << std::endl;
 }
 
-HL_PRIM void HL_NAME(setButtonFont)(vstring *name, int size = 0) {
+HL_PRIM void HL_NAME(setButtonFont)(vstring *name, int size = 0)
+{
 	if (size == 0)
 		size = 10;
 
-    // Delete old font first
-    if (titlebar__hButtonFont != nullptr) {
-        DeleteObject(titlebar__hButtonFont);
-        titlebar__hButtonFont = nullptr;
-    }
+	// Delete old font first
+	if (titlebar__hButtonFont != nullptr)
+	{
+		DeleteObject(titlebar__hButtonFont);
+		titlebar__hButtonFont = nullptr;
+	}
 
 	std::wstring wname = utf8_to_wide(hl_to_utf8(name->bytes));
 
-    titlebar__hButtonFont = CreateFontW(
-        size, 0, 0, 0, FW_MEDIUM, false, false, false,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-        wname.c_str()
-    );
+	titlebar__hButtonFont = CreateFontW(
+		size, 0, 0, 0, FW_MEDIUM, false, false, false,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+		wname.c_str());
 }
 
 HL_PRIM void HL_NAME(redrawWindow)(_NO_ARG)

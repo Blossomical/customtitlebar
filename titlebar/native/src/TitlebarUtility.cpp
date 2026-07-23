@@ -224,7 +224,21 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             DeleteDC(hMemDC);
         }
         else
+        {
+            // we don't want the main context to flicker now do we?, kind of a poopy fix but it's all i was able to do for now
+            WINDOWPLACEMENT wp = {sizeof(WINDOWPLACEMENT)};
+            GetWindowPlacement(hwnd, &wp);
+            int *currentFrameDimensions = (wp.showCmd == SW_MAXIMIZE) ? titlebar__zoomedFrameDimensions : titlebar__frameDimensions;
+
+            RECT clientWndRect = {
+                currentFrameDimensions[0],
+                currentFrameDimensions[1],
+                rect.right - currentFrameDimensions[2],
+                rect.bottom - currentFrameDimensions[3]};
+            ExcludeClipRect(hdc, clientWndRect.left, clientWndRect.top, clientWndRect.right, clientWndRect.bottom);
+
             FillRect(hdc, &rect, titlebar__titleBarBrush); // window frame
+        }
 
         int bufsize = GetWindowTextLength(hwnd) + 1;
         LPWSTR title = new WCHAR[bufsize];
@@ -376,6 +390,10 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_FRAME);
         }
         return 0;
+    }
+    case WM_ERASEBKGND:
+    { // hopefully this works permanently cuz istg
+        return 1;
     }
     // to handle redraws n stuff like that
     case WM_NCACTIVATE:
