@@ -8,6 +8,7 @@ extern class TitlebarUtility
 {
 	@:native('titlebar__initializeNewWndProc') private static function initialize():Void;
 	@:native('titlebar__registerFontFromPath') private static function registerFont(path:String):Void;
+	@:native('titlebar__registerFontFromPath') private static function registerFontFromPath(path:String):Void;
 	@:native('titlebar__loadGDI') private static function loadGDI():Void;
 	
 	// customization
@@ -41,12 +42,14 @@ extern class TitlebarUtility
 extern class TitlebarUtility
 {
 	@:hlNative('titlebar', 'initializeNewWndProc') public static function initialize():Void;
-	public static function registerFont(path:String):Void {
+	public static function registerFont(path:String):Void
+	{
 		trace(path);
 		registerFontFromPath(path);
 		trace(path + "post");
 	}
 	@:hlNative('titlebar', 'registerFontFromPath') public static function registerFontFromPath(path:String):Void;
+	@:hlNative('titlebar', 'registerFontFromPath') public static function registerFont(path:String):Void;
 	@:hlNative('titlebar', 'loadGDI') private static function loadGDI():Void;
 	
 	// customization
@@ -75,6 +78,4 @@ extern class TitlebarUtility
 	@:hlNative('titlebar', 'redrawWindow') public static function redrawWindow():Void;
 	@:hlNative('titlebar', 'setCenterTitle') public static function setCenterTitle(centerTitle:Bool):Void;
 }
-
 #end
-
