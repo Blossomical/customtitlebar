@@ -393,7 +393,7 @@ LRESULT CALLBACK titlebar__wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     }
     case WM_ERASEBKGND:
     { // hopefully this works permanently cuz istg
-        return 1;
+        return DefWindowProc(hwnd, message, wParam, lParam);
     }
     // to handle redraws n stuff like that
     case WM_NCACTIVATE:
